@@ -30,8 +30,8 @@ module DelegateBelongsTo
     # delegate_belongs_to :contact, [:defaults]  ## same as above, and useless
     # delegate_belongs_to :contact, [:defaults, :address, :fullname], :class_name => 'VCard'
     ##
-    def delegate_belongs_to(association, attrs=[], opts={})
-      attrs ||= []
+    def delegate_belongs_to(association, *attrs)
+      opts = attrs.extract_options!
       initialize_association :belongs_to, association, opts
       attrs = get_association_column_names(association) if attrs.empty?      
       attrs.concat get_association_column_names(association) if attrs.delete :defaults

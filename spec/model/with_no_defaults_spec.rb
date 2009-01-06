@@ -4,7 +4,7 @@ describe DelegateBelongsTo, 'with no default delegations and one specified deleg
 
   before :all do
     @fields = [:fullname]
-    UserNoDefault.delegate_belongs_to :contact, @fields
+    UserNoDefault.delegate_belongs_to :contact, *@fields
   end
 
   before :each do
