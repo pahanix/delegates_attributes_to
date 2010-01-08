@@ -1,0 +1,35 @@
+require File.join(File.dirname(__FILE__), '..', 'spec_helper')
+
+describe DelegateBelongsTo, 'with partial dirty delegations' do
+
+  before :all do
+    @fields = [:firstname]
+    UserNoDefault.belongs_to :contact
+    UserNoDefault.delegates_attributes_to :contact, :firstname
+  end
+
+  before :each do
+    @user = UserNoDefault.new
+  end  
+
+  [:lastname, :lastname_change, :lastname_changed?, :lastname_was, :lastname_will_change!].each do |method|
+    it "should not respond_to #{method}" do
+      @user.should_not respond_to(method)
+    end
+  end
+
+  describe "changing not tracked attribute" do
+    before :each do
+      @user.build_contact
+      @user.contact.lastname = "Smith"
+    end
+  
+    it "should NOT be changed as user" do
+      @user.should_not be_changed
+    end
+    
+    it "should be changed as user.contact" do
+      @user.contact.should be_changed
+    end
+  end
+end
