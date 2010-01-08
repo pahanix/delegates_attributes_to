@@ -59,6 +59,17 @@ module DelegateBelongsTo
           send("build_#{association}") unless send(association)
           send(association).send("#{attribute}=", value)
         end
+        
+        # if dirty = true
+        #   ActiveRecord::Dirty::DIRTY_SUFFIXES.each do |suffix|
+        #     define_method("#{attribute}#{suffix}") do
+        #       send("build_#{association}") unless send(association)
+        #       send(association).send("#{attribute}#{suffix}")
+        #     end
+        #   end
+        # end
+        # 
+        
       end
     end
     
