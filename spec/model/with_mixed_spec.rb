@@ -8,7 +8,7 @@ describe DelegateBelongsTo, 'with a mix of the default delegations and a specifi
   end
 
   before :each do
-    @user = UserMixed.new      
+    @user = UserMixed.new
   end
 
   it 'should declare the association' do
@@ -25,5 +25,9 @@ describe DelegateBelongsTo, 'with a mix of the default delegations and a specifi
     @fields.each do |col|
       @user.should respond_to("#{col}=")
     end
+  end
+
+  it "should raise NoMethodError for #fullname=" do
+    lambda { @user.fullname = "John Smith" }.should raise_error(NoMethodError)
   end
 end
