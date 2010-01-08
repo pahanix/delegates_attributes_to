@@ -18,11 +18,6 @@
 module DelegateBelongsTo
   
   module ClassMethods
-    
-    # TODO class inheritance accessor
-    @@default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
-    mattr_accessor :default_rejected_delegate_columns
-        
     ##
     # Creates methods for accessing and setting attributes on an association.  Uses same
     # default list of attributes as delegates_to_association.  
@@ -64,10 +59,11 @@ module DelegateBelongsTo
     
   end
   
-  def self.included(receiver)
-    receiver.extend ClassMethods
+  def self.included(base)
+    base.extend ClassMethods
+    base.class_inheritable_accessor :default_rejected_delegate_columns
+    base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
   end
-
 end
 
 ActiveRecord::Base.send :include, DelegateBelongsTo
