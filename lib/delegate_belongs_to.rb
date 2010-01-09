@@ -8,9 +8,6 @@
 # u.changed? # => false
 # u.firstname = 'Bobby'
 # u.changed? # => true
-# 
-# Todo - add has_one support. fairly straightforward addition
-##
 module DelegateBelongsTo
   
   module ClassMethods
@@ -25,6 +22,13 @@ module DelegateBelongsTo
     def delegate_belongs_to(association, *attributes)
       options = attributes.extract_options!
       belongs_to association, options unless reflect_on_association(association)
+      
+      delegates_attributes_to association, *attributes
+    end
+
+    def delegate_has_one(association, *attributes)
+      options = attributes.extract_options!
+      has_one association, options unless reflect_on_association(association)
       
       delegates_attributes_to association, *attributes
     end
