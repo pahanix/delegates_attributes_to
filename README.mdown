@@ -1,0 +1,57 @@
+# Delegates Attributes To
+
+Simple association attributes delegator plugin. It automatically delegates association attributes accessors to a model. It also supports ActiveRecord::Dirty check for delegated attributes.
+
+[Original idea](http://www.kellerandfaber.com/writing/delegate_belongs_to-delegating-to-associations-in-rails) of the [plugin](http://github.com/faber/delegate\_belongs\_to)
+
+    class Contact
+      # firstname
+      # lastname
+    end
+
+    class Profile
+      # about
+      # hobby
+    end
+
+    class User
+      belongs_to :contact
+      delegates_attributes_to :contact
+
+      # or 
+      # delegate_belong_to :contact
+
+      has_one :profile
+      delegates_attributes_to :profile
+      
+      # or 
+      # delegate_has_one :profile
+      
+    end
+
+# Full ActiveRecord::Dirty check support for delegated attributes
+
+    u = User.first
+    
+    u.firstname               # => "Jonh"
+    u.firstname_changed?      # => false
+    u.changed?                # => false
+    u.firstname = 'Bob'       
+    u.firstname               # => "Bob"
+    u.firstname_was           # => "Jonh"
+    u.firstname_changed?      # => true
+    u.changed?                # => true
+    u.contact.changed?        # => true
+    
+    u = User.last
+    
+    u.changed?                # => false
+    u.profile.about = "Bob"
+    u.chaged?                 # => true
+    
+    u = User.last
+    
+    u.chaged?                 # => false
+    u.about = "Bob"
+    u.chaged?                 # => true
+    u.profile.chaged?         # => true
