@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
-describe DelegateBelongsTo, 'with dirty delegations' do
+describe DelegatesAttributesTo, 'with dirty delegations' do
 
   before :all do
     @fields = Contact.column_names - ActiveRecord::Base.default_rejected_delegate_columns

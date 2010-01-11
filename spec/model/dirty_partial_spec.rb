@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
-describe DelegateBelongsTo, 'with partial dirty delegations' do
+describe DelegatesAttributesTo, 'with partial dirty delegations' do
 
   before :all do
     @fields = [:firstname]

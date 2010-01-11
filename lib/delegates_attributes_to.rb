@@ -8,13 +8,13 @@
 # u.changed? # => false
 # u.firstname = 'Bobby'
 # u.changed? # => true
-module DelegateBelongsTo
+module DelegatesAttributesTo
   
   module ClassMethods
     ##
     # Creates methods for accessing and setting attributes on an association.  Uses same
     # default list of attributes as delegates_to_association.  
-    # @todo Integrate this with ActiveRecord::Dirty, so if you set a property through one of these setters and then call save on this object, it will save the associated object automatically.
+
     # delegate_belongs_to :contact
     # delegate_belongs_to :contact, [:defaults]  ## same as above, and useless
     # delegate_belongs_to :contact, [:defaults, :address, :fullname], :class_name => 'VCard'
@@ -102,4 +102,6 @@ module DelegateBelongsTo
   end
 end
 
-ActiveRecord::Base.send :include, DelegateBelongsTo
+DelegateBelongsTo = DelegatesAttributesTo unless defined?(DelegateBelongsTo)
+
+ActiveRecord::Base.send :include, DelegatesAttributesTo

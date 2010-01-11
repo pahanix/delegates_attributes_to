@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
-describe DelegateBelongsTo, 'with the default delegations' do
+describe DelegatesAttributesTo, 'with the default delegations' do
 
   before :all do
     @fields = Contact.column_names - UserDefault.default_rejected_delegate_columns

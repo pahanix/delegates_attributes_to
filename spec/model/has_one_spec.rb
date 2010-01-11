@@ -1,22 +1,22 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
-describe DelegateBelongsTo, 'with has one delegation' do
+describe DelegatesAttributesTo, 'with has one delegation' do
 
   before :all do
     @fields = [:about, :hobby]
-    User.delegate_has_one :profile
+    UserDefault.delegate_has_one :profile, :foreign_key => 'user_id'
   end
 
   before :each do
-    @user = User.new
+    @user = UserDefault.new
   end  
 
   it 'should declare the association' do
-    User.reflect_on_association(:profile).should_not be_nil
+    UserDefault.reflect_on_association(:profile).should_not be_nil
   end
   
   it "should set reflection autosave option to true" do
-    User.reflect_on_association(:profile).options[:autosave].should be_true
+    UserDefault.reflect_on_association(:profile).options[:autosave].should be_true
   end
 
   it 'creates reader methods for the columns' do
@@ -88,13 +88,13 @@ describe DelegateBelongsTo, 'with has one delegation' do
         @user.about = "I'm Bob"
         @user.save
         
-        @user = User.find(@user.id)
+        @user = UserDefault.find(@user.id)
         @user.about.should == "I'm Bob"
 
         @user.hobby = "Listening to music"
         @user.save
         
-        @user = User.find(@user.id)
+        @user = UserDefault.find(@user.id)
         @user.about.should == "I'm Bob"
         @user.hobby.should  == "Listening to music"
       end

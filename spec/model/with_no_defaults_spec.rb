@@ -1,6 +1,6 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
-describe DelegateBelongsTo, 'with no default delegations and one specified delegation' do
+describe DelegatesAttributesTo, 'with no default delegations and one specified delegation' do
 
   before :all do
     @fields = [:fullname]

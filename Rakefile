@@ -14,7 +14,7 @@ end
 desc 'Generate documentation for the delegate_belongs_to plugin.'
 Rake::RDocTask.new(:rdoc) do |rdoc|
   rdoc.rdoc_dir = 'rdoc'
-  rdoc.title    = 'DelegateBelongsTo'
+  rdoc.title    = 'DelegatesAttributesTo'
   rdoc.options << '--line-numbers' << '--inline-source'
   rdoc.rdoc_files.include('README')
   rdoc.rdoc_files.include('lib/**/*.rb')
