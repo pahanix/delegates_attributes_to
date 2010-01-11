@@ -14,6 +14,10 @@ describe DelegateBelongsTo, 'with has one delegation' do
   it 'should declare the association' do
     User.reflect_on_association(:profile).should_not be_nil
   end
+  
+  it "should set reflection autosave option to true" do
+    User.reflect_on_association(:profile).options[:autosave].should be_true
+  end
 
   it 'creates reader methods for the columns' do
     @fields.each do |col|
@@ -79,6 +83,22 @@ describe DelegateBelongsTo, 'with has one delegation' do
         @user.send(:changed_attributes).size.should == 0
         @user.profile.send(:changed_attributes).size.should == 0
       end
+
+      it "should save delegated attributes" do
+        @user.about = "I'm Bob"
+        @user.save
+        
+        @user = User.find(@user.id)
+        @user.about.should == "I'm Bob"
+
+        @user.hobby = "Listening to music"
+        @user.save
+        
+        @user = User.find(@user.id)
+        @user.about.should == "I'm Bob"
+        @user.hobby.should  == "Listening to music"
+      end
+      
     end
     
   end

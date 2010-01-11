@@ -12,6 +12,10 @@ describe DelegateBelongsTo, 'with dirty delegations' do
     @user = UserDefault.new
   end  
 
+  it "should set reflection autosave option to true" do
+    UserDefault.reflect_on_association(:contact).options[:autosave].should be_true
+  end
+
   describe "reading from no contact" do
     it "should return nil as firstname" do
       @user.firstname.should be_nil
@@ -109,6 +113,20 @@ describe DelegateBelongsTo, 'with dirty delegations' do
           @user.save
           @user.send(:changed_attributes).size.should == 0
           @user.contact.send(:changed_attributes).size.should == 0
+        end
+        
+        it "should save delegated attributes" do
+          @user.firstname = "Bob"
+          @user.save
+          
+          @user = UserDefault.find(@user.id)
+
+          @user.lastname = "Marley"
+          @user.save
+          
+          @user = UserDefault.find(@user.id)
+          @user.firstname.should == "Bob"
+          @user.lastname.should  == "Marley"
         end
       end
   

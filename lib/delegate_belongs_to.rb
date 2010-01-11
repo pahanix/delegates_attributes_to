@@ -40,7 +40,10 @@ module DelegateBelongsTo
     # delegates_attributes_to :profile
     
     def delegates_attributes_to(association, *attributes)
-      raise ArgumentError, "Unknown association #{association}" unless reflection = reflect_on_association(association)
+      reflection = reflect_on_association(association)
+      raise ArgumentError, "Unknown association #{association}" unless reflection
+
+      reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
 
       if attributes.empty? || attributes.delete(:defaults)
         column_names = reflection.klass.column_names
