@@ -80,7 +80,12 @@ module DelegatesAttributesTo
       def changed_attributes_with_associations
         result = {}
         self.class.dirty_associations.each do |association, attributes|
-          association_changed_attributes = send(association).try(:changed_attributes) || {}
+          # If association isn't loaded yet it isn't changed at all. So we skip it.
+          # If we don't skip it and have mutual delegation beetween 2 models 
+          # we get SystemStackError: stack level too deep while trying to load 
+          # a chain like user.profile.user.profile.user.profile...
+          next unless send("loaded_#{association}?")
+          association_changed_attributes = send(association).send(:changed_attributes) || {}
           result.merge! association_changed_attributes.slice(*attributes)
         end
         changed_attributes_without_associations.merge!(result)
