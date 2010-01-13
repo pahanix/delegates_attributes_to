@@ -4,7 +4,6 @@ describe DelegatesAttributesTo, 'with has one delegation' do
 
   before :all do
     @fields = [:about, :hobby]
-    UserDefault.delegate_has_one :profile, :foreign_key => 'user_id'
   end
 
   before :each do

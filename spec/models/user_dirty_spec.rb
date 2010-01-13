@@ -4,16 +4,14 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
 
   before :all do
     @fields = Contact.column_names - ActiveRecord::Base.default_rejected_delegate_columns
-    UserDefault.belongs_to :contact
-    UserDefault.delegates_attributes_to :contact
   end
 
   before :each do
-    @user = UserDefault.new
+    @user = UserDirty.new
   end  
 
   it "should set reflection autosave option to true" do
-    UserDefault.reflect_on_association(:contact).options[:autosave].should be_true
+    UserDirty.reflect_on_association(:contact).options[:autosave].should be_true
   end
 
   describe "reading from no contact" do
@@ -101,10 +99,8 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
   
   [false, true].each do |bool|
     describe "partial update #{bool}" do
-      before :all do
-        ActiveRecord::Base.partial_updates = bool
-      end
-  
+      ActiveRecord::Base.partial_updates = bool
+      
       describe "#save" do
         it "should clear changed_attribute in dirty assosiations" do
           @user.firstname = "John"
@@ -114,22 +110,8 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
           @user.send(:changed_attributes).size.should == 0
           @user.contact.send(:changed_attributes).size.should == 0
         end
-        
-        it "should save delegated attributes" do
-          @user.firstname = "Bob"
-          @user.save
-          
-          @user = UserDefault.find(@user.id)
-
-          @user.lastname = "Marley"
-          @user.save
-          
-          @user = UserDefault.find(@user.id)
-          @user.firstname.should == "Bob"
-          @user.lastname.should  == "Marley"
-        end
       end
-  
+      
       describe "#save(false)" do
         it "should clear changed_attribute in dirty assosiations" do
           @user.firstname = "John"
@@ -140,9 +122,9 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
           @user.contact.send(:changed_attributes).size.should == 0
         end
       end
-  
+      
       describe "#save!" do
-        it "should clear changed_attribute in dirty assosiations" do
+        it "should clear changed_attribute in dirty assosiation" do
           @user.firstname = "John"
           @user.send(:changed_attributes).size.should == 1
           @user.contact.send(:changed_attributes).size.should == 1
@@ -151,19 +133,19 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
           @user.contact.send(:changed_attributes).size.should == 0
         end
       end
-
+      
+      
       describe "#reload" do
         before :each do
           @user.firstname = "John"
           @user.save!
         end
-    
+        
         it "should clear changed_attribute in dirty assosiations" do
           @user.firstname = "Bob"
           @user.send(:changed_attributes).size.should == 1
           @user.contact.send(:changed_attributes).size.should == 1
           @user.reload
-      
           @user.firstname.should == "John"
           @user.send(:changed_attributes).size.should == 0
           @user.contact.send(:changed_attributes).size.should == 0

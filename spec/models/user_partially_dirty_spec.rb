@@ -2,14 +2,8 @@ require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
 describe DelegatesAttributesTo, 'with partial dirty delegations' do
 
-  before :all do
-    @fields = [:firstname]
-    UserNoDefault.belongs_to :contact
-    UserNoDefault.delegates_attributes_to :contact, :firstname
-  end
-
   before :each do
-    @user = UserNoDefault.new
+    @user = UserPartiallyDirty.new
   end  
 
   [:lastname, :lastname_change, :lastname_changed?, :lastname_was, :lastname_will_change!].each do |method|

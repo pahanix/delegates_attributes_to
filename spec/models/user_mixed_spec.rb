@@ -4,7 +4,6 @@ describe DelegatesAttributesTo, 'with a mix of the default delegations and a spe
 
   before :all do
     @fields = Contact.column_names - UserMixed.default_rejected_delegate_columns + [:fullname]
-    UserMixed.delegate_belongs_to :contact, :defaults, :fullname
   end
 
   before :each do
