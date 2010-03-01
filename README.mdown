@@ -72,22 +72,22 @@ __Important__. It tracks for changes only chosen delegated attributes and do not
 
     u.changed?                # => false
     u.profile.about = "Bob"
-    u.chaged?                 # => true
+    u.changed?                # => true
 
     u = User.last
 
-    u.chaged?                 # => false
+    u.changed?                # => false
     u.about = "Bob"
-    u.chaged?                 # => true
-    u.profile.chaged?         # => true
+    u.changed?                # => true
+    u.profile.changed?        # => true
     
     # it doesn't track chages to non delegated attribute
     u = User.last
 
-    u.chaged?                 # => false
+    u.changed?                # => false
     u.profile.hobby = "Basketball"
-    u.chaged?                 # => false
-    u.profile.chaged?         # => true
+    u.changed?                # => false
+    u.profile.changed?        # => true
 
 
 ### It is backward compatible with David Faber's delegate\_belong\_to
