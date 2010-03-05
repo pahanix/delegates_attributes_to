@@ -71,12 +71,39 @@ module DelegatesAttributesTo
       end
     end
     
+    def detect_association_by_attribute(attr_name)
+      dirty_associations.each do |assoc, attributes|
+        return assoc if attributes.include?(attr_name.to_s[/^(\w+)(\([0-9]*[if]\))?$/, 1])
+      end
+      return nil
+    end
+    
   end
 
   module InstanceMethods
     
     private
     
+      def assign_multiparameter_attributes_with_delegation(pairs)
+        delegated_pairs = {}
+        original_pairs  = []
+        
+        pairs.each do |name, value|
+          if assoc = self.class.detect_association_by_attribute(name)
+            (delegated_pairs[assoc] ||= {})[name] = value
+          else
+            original_pairs << [name, value]
+          end
+        end
+        
+        delegated_pairs.each do |association, attributes|
+          association_object = send(association) || send("build_#{association}")
+          association_object.attributes = attributes
+        end
+        
+        assign_multiparameter_attributes_without_delegation(original_pairs)
+      end
+      
       def changed_attributes
         result = {}
         self.class.dirty_associations.each do |association, attributes|
@@ -97,6 +124,8 @@ module DelegatesAttributesTo
   def self.included(base)
     base.extend ClassMethods
     base.send :include, InstanceMethods
+    
+    base.alias_method_chain :assign_multiparameter_attributes, :delegation
     
     base.class_inheritable_accessor :default_rejected_delegate_columns
     base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
