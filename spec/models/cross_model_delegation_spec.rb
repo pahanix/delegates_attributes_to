@@ -4,10 +4,10 @@ describe DelegatesAttributesTo, 'with mutual delegation' do
 
   before :all do
     UserNoDefault.has_one :profile, :foreign_key => 'user_id'
-    UserNoDefault.delegates_attributes_to :profile
+    UserNoDefault.delegate_attributes :to => :profile
     
     Profile.belongs_to :user, :class_name => 'UserNoDefault', :foreign_key => 'user_id'
-    Profile.delegates_attributes_to :user
+    Profile.delegate_attributes :to => :user
   end
 
   before :each do

@@ -19,18 +19,20 @@ module DelegatesAttributesTo
     # delegate_belongs_to :contact, [:defaults]  ## same as above, and useless
     # delegate_belongs_to :contact, [:defaults, :address, :fullname], :class_name => 'VCard'
     ##
-    def delegate_belongs_to(association, *attributes)
-      options = attributes.extract_options!
+    def delegate_belongs_to(association, *args)
+      options = args.extract_options!
       belongs_to association, options unless reflect_on_association(association)
-      
-      delegates_attributes_to association, *attributes
+      options[:to] = association
+      args << options
+      delegate_attributes(*args)
     end
 
-    def delegate_has_one(association, *attributes)
-      options = attributes.extract_options!
+    def delegate_has_one(association, *args)
+      options = args.extract_options!
       has_one association, options unless reflect_on_association(association)
-      
-      delegates_attributes_to association, *attributes
+      options[:to] = association
+      args << options
+      delegate_attributes(*args)
     end
     
     # belongs_to :contact
@@ -39,10 +41,25 @@ module DelegatesAttributesTo
     # has_one :profile
     # delegates_attributes_to :profile
     
-    def delegates_attributes_to(association, *attributes)
+    def delegates_attributes_to(association, *args)
+      warn "delegates_attributes_to is deprecated use delegate_attributes :to => association syntax"
+      options = args.extract_options!
+      options[:to] = association
+      args << options
+      delegate_attributes(*args)
+    end
+    
+    # New syntax
+    #
+    # has_one :profile
+    # delegate_attributes :to => :profile
+    def delegate_attributes(*args)
+      options = args.extract_options!
+      association = options[:to] || raise(ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter")
       reflection = reflect_on_association(association)
       raise ArgumentError, "Unknown association #{association}" unless reflection
 
+      attributes = args
       reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
 
       if attributes.empty? || attributes.delete(:defaults)
@@ -68,6 +85,8 @@ module DelegatesAttributesTo
         end
       end
     end
+    
+    alias_method :delegate_attribute, :delegate_attributes
     
     def detect_association_by_attribute(attribute)
       delegated_attributes[normalize_attribute_name(attribute)]
