@@ -53,11 +53,12 @@ module DelegatesAttributesTo
     #
     # has_one :profile
     # delegate_attributes :to => :profile
-    def delegate_attributes(*args)
-      options = args.extract_options!
-      attributes = args
-      association = options.delete(:to)
-      raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter" unless association
+    def delegate_attributes(*attributes)
+      options = attributes.extract_options!
+      unless options.is_a?(Hash) && association = options[:to]
+        raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter"
+      end
+      
       reflection = reflect_on_association(association)
       raise ArgumentError, "Unknown association #{association}" unless reflection
 
@@ -69,7 +70,7 @@ module DelegatesAttributesTo
 
       attributes.each do |attribute| 
         delegated_attributes.merge!(attribute => association)
-        define_delegated_attribute_methods(association, attribute)
+        define_delegated_attribute_methods(association, attribute, options[:prefix])
       end
     end
     
@@ -83,15 +84,18 @@ module DelegatesAttributesTo
     
     private
     
-    def define_delegated_attribute_methods(association, attribute)
-      delegate attribute, :to => association, :allow_nil => true
-      define_method("#{attribute}=") do |value|
+    def define_delegated_attribute_methods(association, attribute, prefix=nil)
+      delegate attribute, :to => association, :allow_nil => true, :prefix => prefix
+      
+      prefix = prefix && "#{prefix == true ? association : prefix}_"
+
+      define_method("#{prefix}#{attribute}=") do |value|
         association_object = send(association) || send("build_#{association}")
         association_object.send("#{attribute}=", value)
       end
       
       ActiveRecord::Dirty::DIRTY_SUFFIXES.each do |suffix|
-        define_method("#{attribute}#{suffix}") do
+        define_method("#{prefix}#{attribute}#{suffix}") do
           association_object = send(association) || send("build_#{association}")
           association_object.send("#{attribute}#{suffix}")
         end
