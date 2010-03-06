@@ -86,7 +86,9 @@ module DelegatesAttributesTo
       end
     end
     
-    alias_method :delegate_attribute, :delegate_attributes
+    alias_method :delegate_attribute,   :delegate_attributes
+    alias_method :delegates_attribute,  :delegate_attributes
+    alias_method :delegates_attributes, :delegate_attributes
     
     def detect_association_by_attribute(attribute)
       delegated_attributes[normalize_attribute_name(attribute)]
