@@ -55,34 +55,21 @@ module DelegatesAttributesTo
     # delegate_attributes :to => :profile
     def delegate_attributes(*args)
       options = args.extract_options!
-      association = options[:to] || raise(ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter")
+      attributes = args
+      association = options.delete(:to)
+      raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter" unless association
       reflection = reflect_on_association(association)
       raise ArgumentError, "Unknown association #{association}" unless reflection
 
-      attributes = args
       reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
 
       if attributes.empty? || attributes.delete(:defaults)
-        column_names = reflection.klass.column_names
-        default_rejected_delegate_columns.each {|column| column_names.delete(column) }
-        attributes += column_names
+        attributes += default_delegated_attributes_for(reflection)
       end
 
-      attributes.each {|attr| delegated_attributes.merge!(attr => association)}
-
-      attributes.each do |attribute|
-        delegate attribute, :to => association, :allow_nil => true
-        define_method("#{attribute}=") do |value|
-          send("build_#{association}") unless send(association)
-          send(association).send("#{attribute}=", value)
-        end
-        
-        ActiveRecord::Dirty::DIRTY_SUFFIXES.each do |suffix|
-          define_method("#{attribute}#{suffix}") do
-            send("build_#{association}") unless send(association)
-            send(association).send("#{attribute}#{suffix}")
-          end
-        end
+      attributes.each do |attribute| 
+        delegated_attributes.merge!(attribute => association)
+        define_delegated_attribute_methods(association, attribute)
       end
     end
     
@@ -96,12 +83,32 @@ module DelegatesAttributesTo
     
     private
     
+    def define_delegated_attribute_methods(association, attribute)
+      delegate attribute, :to => association, :allow_nil => true
+      define_method("#{attribute}=") do |value|
+        association_object = send(association) || send("build_#{association}")
+        association_object.send("#{attribute}=", value)
+      end
+      
+      ActiveRecord::Dirty::DIRTY_SUFFIXES.each do |suffix|
+        define_method("#{attribute}#{suffix}") do
+          association_object = send(association) || send("build_#{association}")
+          association_object.send("#{attribute}#{suffix}")
+        end
+      end
+    end
+    
+    def default_delegated_attributes_for(reflection)
+      column_names = reflection.klass.column_names
+      default_rejected_delegate_columns.each {|column| column_names.delete(column) }
+      column_names
+    end
+    
     # convert multiparameter attribute to normal form 
     # 'published_at(2i)' becomes 'published_at'
     def normalize_attribute_name(attribute)
       attribute.to_s[/^(\w+)(\([0-9]*\w\))?$/, 1]
     end
-    
   end
 
   module InstanceMethods
