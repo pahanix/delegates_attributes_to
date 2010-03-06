@@ -51,9 +51,7 @@ module DelegatesAttributesTo
         attributes += column_names
       end
 
-      attributes.map!(&:to_s)
-
-      dirty_associations.merge!(association => attributes)
+      attributes.each {|attr| delegated_attributes.merge!(attr => association)}
 
       attributes.each do |attribute|
         delegate attribute, :to => association, :allow_nil => true
@@ -71,11 +69,16 @@ module DelegatesAttributesTo
       end
     end
     
-    def detect_association_by_attribute(attr_name)
-      dirty_associations.each do |assoc, attributes|
-        return assoc if attributes.include?(attr_name.to_s[/^(\w+)(\([0-9]*[if]\))?$/, 1])
-      end
-      return nil
+    def detect_association_by_attribute(attribute)
+      delegated_attributes[normalize_attribute_name(attribute)]
+    end
+    
+    private
+    
+    # convert multiparameter attribute to normal form 
+    # 'published_at(2i)' becomes 'published_at'
+    def normalize_attribute_name(attribute)
+      attribute.to_s[/^(\w+)(\([0-9]*\w\))?$/, 1]
     end
     
   end
@@ -106,15 +109,17 @@ module DelegatesAttributesTo
       
       def changed_attributes
         result = {}
-        self.class.dirty_associations.each do |association, attributes|
+        self.class.delegated_attributes.each do |attribute, association|
           # If an association isn't loaded it hasn't changed at all. So we skip it.
           # If we don't skip it and have mutual delegation beetween 2 models 
           # we get SystemStackError: stack level too deep while trying to load 
           # a chain like user.profile.user.profile.user.profile...
           next unless send("loaded_#{association}?")
-          association_changed_attributes = send(association).send(:changed_attributes) || {}
-          result.merge! association_changed_attributes.slice(*attributes)
-        end
+          # skip if association object is nil
+          next unless association_object = send(association)
+          # call private method #changed_attributes
+          result.merge! association_object.send(:changed_attributes).slice(attribute)
+        end        
         changed_attributes = super
         changed_attributes.merge!(result)
         changed_attributes
@@ -129,9 +134,9 @@ module DelegatesAttributesTo
     
     base.class_inheritable_accessor :default_rejected_delegate_columns
     base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
-    
-    base.class_inheritable_accessor :dirty_associations
-    base.dirty_associations = {}
+        
+    base.class_inheritable_accessor :delegated_attributes
+    base.delegated_attributes = HashWithIndifferentAccess.new
   end
 end
 
