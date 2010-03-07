@@ -1,5 +1,12 @@
 require File.join(File.dirname(__FILE__), '..', 'spec_helper')
 
+class UserDelegatesMultiparameterTimeAttributeWithPrefix < ActiveRecord::Base
+  set_table_name 'users'
+  
+  belongs_to :contact
+  delegate_attribute :edited_at, :to => :contact, :prefix => true
+end
+
 describe DelegatesAttributesTo, 'with delegated time attribute' do
 
   before :each do
@@ -76,6 +83,30 @@ describe DelegatesAttributesTo, 'with delegated time attribute' do
     it "should save correct time" do
       @user.attributes = @attributes
       @user.changed_at.should == @etalon
+    end
+  end
+  
+  describe ":prefix => true" do
+    before(:each) do
+      @user = UserDelegatesMultiparameterTimeAttributeWithPrefix.new
+      
+      @attributes = {
+        "contact_edited_at(1i)"=>"2009", 
+        "contact_edited_at(2i)"=>"11", 
+        "contact_edited_at(3i)"=>"4", 
+      }
+      
+      @etalon = Date.new(2009,11,4)
+    end
+    
+    it "should assign correct time" do
+      @user.attributes = @attributes
+      @user.contact_edited_at.should == @etalon
+    end
+
+    it "should save correct time" do
+      @user.attributes = @attributes
+      @user.contact_edited_at.should == @etalon
     end
   end
 end

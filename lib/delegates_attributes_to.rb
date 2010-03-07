@@ -58,6 +58,8 @@ module DelegatesAttributesTo
       unless options.is_a?(Hash) && association = options[:to]
         raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter"
       end
+
+      prefix = options[:prefix] && "#{options[:prefix] == true ? association : options[:prefix]}_"
       
       reflection = reflect_on_association(association)
       raise ArgumentError, "Unknown association #{association}" unless reflection
@@ -69,7 +71,7 @@ module DelegatesAttributesTo
       end
 
       attributes.each do |attribute| 
-        delegated_attributes.merge!(attribute => association)
+        delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
         define_delegated_attribute_methods(association, attribute, options[:prefix])
       end
     end
@@ -77,10 +79,6 @@ module DelegatesAttributesTo
     alias_method :delegate_attribute,   :delegate_attributes
     alias_method :delegates_attribute,  :delegate_attributes
     alias_method :delegates_attributes, :delegate_attributes
-    
-    def detect_association_by_attribute(attribute)
-      delegated_attributes[normalize_attribute_name(attribute)]
-    end
     
     private
     
@@ -108,11 +106,6 @@ module DelegatesAttributesTo
       column_names
     end
     
-    # convert multiparameter attribute to normal form 
-    # 'published_at(2i)' becomes 'published_at'
-    def normalize_attribute_name(attribute)
-      attribute.to_s[/^(\w+)(\([0-9]*\w\))?$/, 1]
-    end
   end
 
   module InstanceMethods
@@ -122,10 +115,16 @@ module DelegatesAttributesTo
       def assign_multiparameter_attributes_with_delegation(pairs)
         delegated_pairs = {}
         original_pairs  = []
-        
+
         pairs.each do |name, value|
-          if assoc = self.class.detect_association_by_attribute(name)
-            (delegated_pairs[assoc] ||= {})[name] = value
+          # it splits multiparameter attribute 
+          # 'published_at(2i)'  => ['published_at(2i)', 'published_at', '(2i)']
+          # 'published_at'      => ['published_at',     'published_at',  nil  ]
+          __, delegated_attribute, suffix = name.match(/^(\w+)(\([0-9]*\w\))?$/).to_a
+          association, attribute = self.class.delegated_attributes[delegated_attribute]
+          
+          if association
+            (delegated_pairs[association] ||= {})["#{attribute}#{suffix}"] = value
           else
             original_pairs << [name, value]
           end
@@ -133,6 +132,7 @@ module DelegatesAttributesTo
         
         delegated_pairs.each do |association, attributes|
           association_object = send(association) || send("build_#{association}")
+          # let association_object handle its multiparameter attributes
           association_object.attributes = attributes
         end
         
@@ -141,7 +141,7 @@ module DelegatesAttributesTo
       
       def changed_attributes
         result = {}
-        self.class.delegated_attributes.each do |attribute, association|
+        self.class.delegated_attributes.each do |delegated_attribute, (association, attribute)|
           # If an association isn't loaded it hasn't changed at all. So we skip it.
           # If we don't skip it and have mutual delegation beetween 2 models 
           # we get SystemStackError: stack level too deep while trying to load 
@@ -150,7 +150,11 @@ module DelegatesAttributesTo
           # skip if association object is nil
           next unless association_object = send(association)
           # call private method #changed_attributes
-          result.merge! association_object.send(:changed_attributes).slice(attribute)
+          association_changed_attributes = association_object.send(:changed_attributes)
+          # next if attribute hasn't been changed
+          next unless association_changed_attributes.has_key?(attribute.to_s)
+          
+          result.merge! delegated_attribute => association_changed_attributes[attribute]
         end        
         changed_attributes = super
         changed_attributes.merge!(result)
