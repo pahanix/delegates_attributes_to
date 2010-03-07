@@ -10,15 +10,49 @@
 # u.changed? # => true
 module DelegatesAttributesTo
   
+  def self.included(base)
+    base.extend ClassMethods
+    base.send :include, InstanceMethods
+    
+    base.alias_method_chain :assign_multiparameter_attributes, :delegation
+    
+    base.class_inheritable_accessor :default_rejected_delegate_columns
+    base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
+        
+    base.class_inheritable_accessor :delegated_attributes
+    base.delegated_attributes = HashWithIndifferentAccess.new
+  end
+  
   module ClassMethods
-    ##
-    # Creates methods for accessing and setting attributes on an association.  Uses same
-    # default list of attributes as delegates_to_association.  
+    # has_one :profile
+    # delegate_attributes :to => :profile
+    def delegate_attributes(*attributes)
+      options = attributes.extract_options!
+      unless options.is_a?(Hash) && association = options[:to]
+        raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter"
+      end
 
-    # delegate_belongs_to :contact
-    # delegate_belongs_to :contact, [:defaults]  ## same as above, and useless
-    # delegate_belongs_to :contact, [:defaults, :address, :fullname], :class_name => 'VCard'
-    ##
+      prefix = options[:prefix] && "#{options[:prefix] == true ? association : options[:prefix]}_"
+      
+      reflection = reflect_on_association(association)
+      raise ArgumentError, "Unknown association #{association}" unless reflection
+
+      reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
+
+      if attributes.empty? || attributes.delete(:defaults)
+        attributes += default_delegated_attributes_for(reflection)
+      end
+
+      attributes.each do |attribute| 
+        delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
+        define_delegated_attribute_methods(association, attribute, options[:prefix])
+      end
+    end
+    
+    alias_method :delegate_attribute,   :delegate_attributes
+    alias_method :delegates_attribute,  :delegate_attributes
+    alias_method :delegates_attributes, :delegate_attributes
+    
     def delegate_belongs_to(association, *args)
       options = args.extract_options!
       # assosiation reflection doesn't ignore prefix option and raises ArgumentError
@@ -56,37 +90,6 @@ module DelegatesAttributesTo
       args << options
       delegate_attributes(*args)
     end
-    
-    # New syntax
-    #
-    # has_one :profile
-    # delegate_attributes :to => :profile
-    def delegate_attributes(*attributes)
-      options = attributes.extract_options!
-      unless options.is_a?(Hash) && association = options[:to]
-        raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter"
-      end
-
-      prefix = options[:prefix] && "#{options[:prefix] == true ? association : options[:prefix]}_"
-      
-      reflection = reflect_on_association(association)
-      raise ArgumentError, "Unknown association #{association}" unless reflection
-
-      reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
-
-      if attributes.empty? || attributes.delete(:defaults)
-        attributes += default_delegated_attributes_for(reflection)
-      end
-
-      attributes.each do |attribute| 
-        delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
-        define_delegated_attribute_methods(association, attribute, options[:prefix])
-      end
-    end
-    
-    alias_method :delegate_attribute,   :delegate_attributes
-    alias_method :delegates_attribute,  :delegate_attributes
-    alias_method :delegates_attributes, :delegate_attributes
     
     private
     
@@ -168,20 +171,7 @@ module DelegatesAttributesTo
         changed_attributes.merge!(result)
         changed_attributes
       end
-  end
-  
-  def self.included(base)
-    base.extend ClassMethods
-    base.send :include, InstanceMethods
-    
-    base.alias_method_chain :assign_multiparameter_attributes, :delegation
-    
-    base.class_inheritable_accessor :default_rejected_delegate_columns
-    base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
-        
-    base.class_inheritable_accessor :delegated_attributes
-    base.delegated_attributes = HashWithIndifferentAccess.new
-  end
+  end  
 end
 
 DelegateBelongsTo = DelegatesAttributesTo unless defined?(DelegateBelongsTo)
