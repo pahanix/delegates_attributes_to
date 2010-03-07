@@ -1,24 +1,18 @@
-# Delegates Attributes To
+# Delegate Attributes
 
-Simple association attributes delegator plugin. It delegates association attributes accessors to a model. It also supports ActiveRecord::Dirty check and auto saving for delegated attributes (see below).
+Association attributes delegator plugin. It delegates association attributes accessors to a model. It also supports ActiveRecord::Dirty check, multiparamenter attributes (1i, 2i, 3i) assigning, auto saving for delegated attributes (see below).
 
 ## Usage
 
     class User
       belongs_to :contact
-      # it delegates all association attribute accessors to :contact except created_at, updated_at, etc.
-      delegates_attributes_to :contact
-      
-      # or shortly
-      # delegate_belong_to :contact
+      # it delegates all association attribute accessors to :contact 
+      # except service attributes like created_at, updated_at, etc.
+      delegate_attributes :to => :contact
       
       has_one :profile
       # it delegates only :about, :hobby attribute accessors to :profile
-      delegates_attributes_to :profile, :about, :hobby
-      
-      # or shortly
-      # delegate_has_one :profile, :about, :hobby
-      
+      delegate_attributes :about, :hobby, :to => :profile
     end
 
 
@@ -28,7 +22,7 @@ Attributes like _id_, _created\_at_, _updated\_at_, _type_, etc are ignored by d
 You can specify which attributes are ignored by changing class inheritable accessor __default\_rejected\_delegate\_columns__ for each class
 
     class Person
-      self.default_rejected_delegate_columns += [:commentable_id, :commentable_type]
+      default_rejected_delegate_columns << [:commentable_id, :commentable_type]
       ...
     end
 
@@ -48,10 +42,10 @@ __Important__. It tracks for changes only chosen delegated attributes and do not
     class User
     
       belongs_to :contact
-      delegates_attributes_to :contact
+      delegate_attributes :to => :contact
     
       has_one :profile
-      delegates_attributes_to :profile, :about
+      delegate_attribute :about, :to => :profile
       ...
     end
 
@@ -89,6 +83,14 @@ __Important__. It tracks for changes only chosen delegated attributes and do not
     u.changed?                # => false
     u.profile.changed?        # => true
 
+### Multiparameter attributes assigning
+
+Multiparameter attributes that need more than one constructor parameter also can be assigned.
+More frequently example is saving a form with multi select date/time attribute through 
+[\#date\_select](http://apidock.com/rails/ActionView/Helpers/DateHelper/date_select) helper.
+(It produces params like 'written\_on(1i)'='2010', 'written\_on(2i)'='3', 'written\_on(3i)'='7')
+Any attribute which is built through [composed\_of](http://apidock.com/rails/ActiveRecord/Aggregations/ClassMethods/composed_of)
+also can be delegated.
 
 ### It is backward compatible with David Faber's delegate\_belong\_to
 
