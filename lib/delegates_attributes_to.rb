@@ -45,7 +45,7 @@ module DelegatesAttributesTo
 
       attributes.each do |attribute| 
         delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
-        define_delegated_attribute_methods(association, attribute, options[:prefix])
+        define_delegated_attribute_methods(association, attribute, prefix)
       end
     end
     
@@ -93,20 +93,13 @@ module DelegatesAttributesTo
     
     private
     
+    ATTRIBUTE_SUFFIXES = (['', '='] + ActiveRecord::Dirty::DIRTY_SUFFIXES).freeze
+    
     def define_delegated_attribute_methods(association, attribute, prefix=nil)
-      delegate attribute, :to => association, :allow_nil => true, :prefix => prefix
-      
-      prefix = prefix && "#{prefix == true ? association : prefix}_"
-
-      define_method("#{prefix}#{attribute}=") do |value|
-        association_object = send(association) || send("build_#{association}")
-        association_object.send("#{attribute}=", value)
-      end
-      
-      ActiveRecord::Dirty::DIRTY_SUFFIXES.each do |suffix|
-        define_method("#{prefix}#{attribute}#{suffix}") do
+      ATTRIBUTE_SUFFIXES.each do |suffix|
+        define_method("#{prefix}#{attribute}#{suffix}") do |*args|
           association_object = send(association) || send("build_#{association}")
-          association_object.send("#{attribute}#{suffix}")
+          association_object.send("#{attribute}#{suffix}", *args)
         end
       end
     end
