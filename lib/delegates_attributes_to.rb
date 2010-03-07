@@ -1,15 +1,7 @@
-##
-# Creates methods on object which delegate to an association proxy.
-# see delegate_belongs_to for two uses
-# 
-# class User < ActiveRecord::Base; delegate_belongs_to :contact, :firstname; end
-# class Contact < ActiveRecord::Base; end
-# u = User.first
-# u.changed? # => false
-# u.firstname = 'Bobby'
-# u.changed? # => true
 module DelegatesAttributesTo
-  
+
+  DEFAULT_REJECTED_COLUMNS = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt'].freeze
+
   def self.included(base)
     base.extend ClassMethods
     base.send :include, InstanceMethods
@@ -17,7 +9,7 @@ module DelegatesAttributesTo
     base.alias_method_chain :assign_multiparameter_attributes, :delegation
     
     base.class_inheritable_accessor :default_rejected_delegate_columns
-    base.default_rejected_delegate_columns = ['created_at','created_on','updated_at','updated_on','lock_version','type','id','position','parent_id','lft','rgt']
+    base.default_rejected_delegate_columns = DEFAULT_REJECTED_COLUMNS.dup
         
     base.class_inheritable_accessor :delegated_attributes
     base.delegated_attributes = HashWithIndifferentAccess.new
