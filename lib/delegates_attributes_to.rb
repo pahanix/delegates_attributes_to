@@ -24,6 +24,9 @@ module DelegatesAttributesTo
   end
   
   module ClassMethods
+    
+    ATTRIBUTE_SUFFIXES = (['', '='] + ActiveRecord::Dirty::DIRTY_SUFFIXES).freeze
+
     # has_one :profile
     # delegate_attributes :to => :profile
     def delegate_attributes(*attributes)
@@ -31,21 +34,25 @@ module DelegatesAttributesTo
       unless options.is_a?(Hash) && association = options[:to]
         raise ArgumentError, "Delegation needs a target. Supply an options hash with a :to key as the last argument (e.g. delegate_attribute :hello, :to => :greeter"
       end
-
       prefix = options[:prefix] && "#{options[:prefix] == true ? association : options[:prefix]}_"
-      
       reflection = reflect_on_association(association)
       raise ArgumentError, "Unknown association #{association}" unless reflection
 
       reflection.options[:autosave] = true unless reflection.options.has_key?(:autosave)
 
       if attributes.empty? || attributes.delete(:defaults)
-        attributes += default_delegated_attributes_for(reflection)
+        attributes += reflection.klass.column_names - default_rejected_delegate_columns
       end
 
       attributes.each do |attribute| 
         delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
-        define_delegated_attribute_methods(association, attribute, prefix)
+
+        ATTRIBUTE_SUFFIXES.each do |suffix|
+          define_method("#{prefix}#{attribute}#{suffix}") do |*args|
+            association_object = send(association) || send("build_#{association}")
+            association_object.send("#{attribute}#{suffix}", *args)
+          end
+        end
       end
     end
     
@@ -89,27 +96,7 @@ module DelegatesAttributesTo
       options[:to] = association
       args << options
       delegate_attributes(*args)
-    end
-    
-    private
-    
-    ATTRIBUTE_SUFFIXES = (['', '='] + ActiveRecord::Dirty::DIRTY_SUFFIXES).freeze
-    
-    def define_delegated_attribute_methods(association, attribute, prefix=nil)
-      ATTRIBUTE_SUFFIXES.each do |suffix|
-        define_method("#{prefix}#{attribute}#{suffix}") do |*args|
-          association_object = send(association) || send("build_#{association}")
-          association_object.send("#{attribute}#{suffix}", *args)
-        end
-      end
-    end
-    
-    def default_delegated_attributes_for(reflection)
-      column_names = reflection.klass.column_names
-      default_rejected_delegate_columns.each {|column| column_names.delete(column) }
-      column_names
-    end
-    
+    end    
   end
 
   module InstanceMethods
