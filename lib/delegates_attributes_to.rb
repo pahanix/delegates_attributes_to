@@ -21,16 +21,24 @@ module DelegatesAttributesTo
     ##
     def delegate_belongs_to(association, *args)
       options = args.extract_options!
+      # assosiation reflection doesn't ignore prefix option and raises ArgumentError
+      prefix  = options.delete(:prefix)
       belongs_to association, options unless reflect_on_association(association)
-      options[:to] = association
+      options[:to]      = association
+      # give back prefix option
+      options[:prefix]  = prefix
       args << options
       delegate_attributes(*args)
     end
 
     def delegate_has_one(association, *args)
       options = args.extract_options!
+      # assosiation reflection doesn't ignore prefix option and raises ArgumentError
+      prefix  = options.delete(:prefix)
       has_one association, options unless reflect_on_association(association)
-      options[:to] = association
+      options[:to]      = association
+      # give back prefix option
+      options[:prefix]  = prefix
       args << options
       delegate_attributes(*args)
     end
