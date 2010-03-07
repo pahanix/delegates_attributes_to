@@ -51,36 +51,14 @@ module DelegatesAttributesTo
     alias_method :delegate_attribute,   :delegate_attributes
     alias_method :delegates_attribute,  :delegate_attributes
     alias_method :delegates_attributes, :delegate_attributes
-    
+        
     def delegate_belongs_to(association, *args)
-      options = args.extract_options!
-      # assosiation reflection doesn't ignore prefix option and raises ArgumentError
-      prefix  = options.delete(:prefix)
-      belongs_to association, options unless reflect_on_association(association)
-      options[:to]      = association
-      # give back prefix option
-      options[:prefix]  = prefix
-      args << options
-      delegate_attributes(*args)
+      delegate_association(:belongs_to, association, *args)
     end
 
     def delegate_has_one(association, *args)
-      options = args.extract_options!
-      # assosiation reflection doesn't ignore prefix option and raises ArgumentError
-      prefix  = options.delete(:prefix)
-      has_one association, options unless reflect_on_association(association)
-      options[:to]      = association
-      # give back prefix option
-      options[:prefix]  = prefix
-      args << options
-      delegate_attributes(*args)
+      delegate_association(:has_one, association, *args)
     end
-    
-    # belongs_to :contact
-    # delegates_attributes_to :contact
-    # 
-    # has_one :profile
-    # delegates_attributes_to :profile
     
     def delegates_attributes_to(association, *args)
       warn "delegates_attributes_to is deprecated use delegate_attributes :to => association syntax"
@@ -88,7 +66,21 @@ module DelegatesAttributesTo
       options[:to] = association
       args << options
       delegate_attributes(*args)
-    end    
+    end
+    
+    private
+    
+      def delegate_association(macro, association, *args)
+        options = args.extract_options!
+        # assosiation reflection doesn't ignore prefix option and raises ArgumentError
+        prefix = options.delete(:prefix)
+        send(macro, association, options) unless reflect_on_association(association)
+        options[:to] = association
+        # give back prefix option
+        options[:prefix] = prefix
+        args << options
+        delegate_attributes(*args)
+      end
   end
 
   module InstanceMethods
