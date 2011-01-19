@@ -1,1 +1,5 @@
+pkg/*
+*.gem
+.bundle
+
 spec/app_root/log/*
