@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_development_dependency 'rspec',            '~> 1.3.0'
-  s.add_development_dependency 'activerecord',     '~> 2.3.8'
+  s.add_development_dependency 'activerecord',     '~> 3.0.3'
   s.add_development_dependency 'database_cleaner', '~> 0.5.2'
   s.add_development_dependency 'sqlite3-ruby',     '~> 1.3.2'
 end
