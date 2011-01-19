@@ -24,7 +24,7 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
         
         it "should save with invalid association" do
           @user.lastname = "Marley"
-          @user.contact.stubs(:valid?).returns(false)
+          @user.contact.stub(:valid?).and_return(false)
           @user.save.should be_true
           @user.reload.lastname.should == "Marley"
         end
@@ -49,7 +49,7 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
         end
         
         it "should save with invalid association" do
-          @user.contact.stubs(:valid?).returns(false)
+          @user.contact.stub(:valid?).and_return(false)
           @user.save(false).should be_true
         end
         
@@ -75,7 +75,7 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
         
         it "should save with invalid association" do
           @user.lastname = "Marley"
-          @user.contact.stubs(:valid?).returns(false)
+          @user.contact.stub(:valid?).and_return(false)
           @user.save!.should be_true
           @user.reload.lastname.should == "Marley"
         end
