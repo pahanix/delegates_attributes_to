@@ -32,7 +32,7 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
         it "should NOT save with blank firstname" do
           @user.firstname = ""
           @user.save.should be_false
-          @user.errors[:firstname].should == "can't be blank"
+          @user.should have(1).error_on(:firstname)
         end
       end
 
