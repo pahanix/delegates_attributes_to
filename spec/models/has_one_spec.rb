@@ -29,6 +29,12 @@ describe DelegatesAttributesTo, 'with has one delegation' do
       @user.should respond_to("#{col}=")
     end
   end
+
+  it 'creates question mark methods for the columns' do
+    @fields.each do |col|
+      @user.should respond_to("#{col}?")
+    end
+  end
   
   describe "reading from no contact" do
     it "should return nil as firstname" do
@@ -50,6 +56,10 @@ describe DelegatesAttributesTo, 'with has one delegation' do
   
     it "should read about" do
       @user.about.should == "I'm John"
+    end
+
+    it "should read about?" do
+      (!!@user.about?).should be_true
     end
   
     it "should read hobby" do

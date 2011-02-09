@@ -18,7 +18,7 @@ module DelegatesAttributesTo
 
   module ClassMethods
 
-    ATTRIBUTE_SUFFIXES = (['', '='] + DIRTY_SUFFIXES).freeze
+    ATTRIBUTE_SUFFIXES = (['', '=', '?'] + DIRTY_SUFFIXES).freeze
 
     # has_one :profile
     # delegate_attributes :to => :profile
