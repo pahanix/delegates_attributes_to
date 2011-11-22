@@ -9,10 +9,10 @@ module DelegatesAttributesTo
 
     base.alias_method_chain :assign_multiparameter_attributes, :delegation
 
-    base.class_inheritable_accessor :default_rejected_delegate_columns
+    base.class_attribute :default_rejected_delegate_columns
     base.default_rejected_delegate_columns = DEFAULT_REJECTED_COLUMNS.dup
 
-    base.class_inheritable_accessor :delegated_attributes
+    base.class_attribute :delegated_attributes
     base.delegated_attributes = HashWithIndifferentAccess.new
   end
 
@@ -36,6 +36,8 @@ module DelegatesAttributesTo
       if attributes.empty? || attributes.delete(:defaults)
         attributes += reflection.klass.column_names - default_rejected_delegate_columns
       end
+
+      self.delegated_attributes = self.delegated_attributes.dup
 
       attributes.each do |attribute|
         delegated_attributes.merge!("#{prefix}#{attribute}" => [association, attribute])
