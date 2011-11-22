@@ -9,11 +9,14 @@ end
 
 class ContactWithDefault < ActiveRecord::Base
   set_table_name 'contacts'
-  
-  def after_initialize
-    self.firstname ||= "David"
-    self.lastname  ||= "Blaine"
-  end
+  after_initialize :init_attrs
+
+  private
+    def init_attrs
+      self.firstname ||= "David"
+      self.lastname  ||= "Blaine"
+    end
+
 end
 
 describe DelegatesAttributesTo, 'delegated attribute having default value' do

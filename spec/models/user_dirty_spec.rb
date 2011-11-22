@@ -112,12 +112,12 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
         end
       end
       
-      describe "#save(false)" do
+      describe "#save(:validate => false)" do
         it "should clear changed_attribute in dirty assosiations" do
           @user.firstname = "John"
           @user.send(:changed_attributes).size.should == 1
           @user.contact.send(:changed_attributes).size.should == 1
-          @user.save(false)
+          @user.save(:validate => false)
           @user.send(:changed_attributes).size.should == 0
           @user.contact.send(:changed_attributes).size.should == 0
         end
