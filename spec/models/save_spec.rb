@@ -38,11 +38,11 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
 
 
 
-      describe "#save(false)" do
+      describe "#save(:validate => false)" do
 
         it "should save delegated attributes" do
           @user.lastname = "Marley"
-          @user.save(false).should be_true
+          @user.save(:validate => false).should be_true
           @user = UserWithFirstnameValidation.find(@id)
           @user.firstname.should == "Bob"
           @user.lastname.should  == "Marley"
@@ -50,12 +50,12 @@ describe DelegatesAttributesTo, 'with dirty delegations' do
 
         it "should save with invalid association" do
           @user.contact.stub(:valid?).and_return(false)
-          @user.save(false).should be_true
+          @user.save(:validate => false).should be_true
         end
 
         it "should save with blank firstname" do
           @user.firstname = ""
-          @user.save(false).should be_true
+          @user.save(:validate => false).should be_true
           @user = UserWithFirstnameValidation.find(@id)
           @user.firstname.should be_blank
         end
