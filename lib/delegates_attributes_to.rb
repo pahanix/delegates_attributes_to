@@ -124,7 +124,7 @@ module DelegatesAttributesTo
           # If we don't skip it and have mutual delegation beetween 2 models
           # we get SystemStackError: stack level too deep while trying to load
           # a chain like user.profile.user.profile.user.profile...
-          next unless send("loaded_#{association}?")
+          next unless association(association).loaded?
           # skip if association object is nil
           next unless association_object = send(association)
           # call private method #changed_attributes
